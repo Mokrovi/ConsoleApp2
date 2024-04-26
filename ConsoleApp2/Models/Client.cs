@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Collections.Generic;
+using static ConsoleApp2.Models.TrpoContext;
 
 namespace ConsoleApp2.Models;
 
@@ -21,4 +23,58 @@ public partial class Client
     public virtual ICollection<Order> OrderRenters { get; set; } = new List<Order>();
 
     public virtual ICollection<Order> OrderTentors { get; set; } = new List<Order>();
+
+    public Client GetClient(int id)
+    {
+        using (var db = new TrpoContext())
+        {
+            foreach (var client in db.Clients)
+            {
+                if (client.Id == id) return client;
+            }
+            return null;
+        }
+    }
+    public bool NewClient(string login, string password, string name, string surename, string patronymic, string email)
+    {
+        using (var db = new TrpoContext())
+        {
+            int id;
+            if (db.Clients.IsNullOrEmpty())
+            {
+                id = 0;
+            }
+            else
+            {
+                List<Client> cl = db.Clients.ToList<Client>();
+                id = cl[cl.Count() - 1].Id + 1;
+                if (db.IsExist(login, password)) return false;
+            }
+            Client person = new Client()
+            {
+                Id = id,
+                Login = login,
+                Password = password,
+                Name = name,
+                Surename = surename,
+                Patronymic = patronymic,
+                Email = email
+            };
+            db.Clients.Add(person);
+            db.SaveChanges();
+            return true;
+        }
+    }
+    public List<Object> GetClientObjects(int id)
+    {
+        using(var db = new TrpoContext())
+        {
+            List<Object> objects = new List<Object>();
+            foreach (var obj in db.Objects)
+            {
+                if (obj.ClientId == id) objects.Add(obj);
+            }
+            return objects;
+        }
+    }
 }
