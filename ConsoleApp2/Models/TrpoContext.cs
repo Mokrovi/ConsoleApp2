@@ -142,29 +142,29 @@ public partial class TrpoContext : DbContext
         }
         return orders.ToArray();
     }
-    public string GetRealtorName(int id)
+    public Realtor GetRealtor(int id)
     {
         foreach (var real in Realtors)
         {
-            if (real.Id == id) return (real.Surename + real.Name[0] + ". " + real.Patronymic[0]);
+            if (real.Id == id) return real;
         }
-        return "no exist";
+        return null;
     }
-    public string GetClientName(int id)
+    public Client GetClient(int id)
     {
         foreach (var client in Clients)
         {
-            if (client.Id == id) return (client.Surename + " " + client.Name[0] + ". " + client.Patronymic[0]);
+            if (client.Id == id) return client;
         }
-        return "no exist";
+        return null;
     }
-    public string GetAdress(int id)
+    public Object GetObject(int id)
     {
         foreach(var obj in Objects)
         {
-            if(obj.Id == id) return obj.Adress;
+            if(obj.Id == id) return obj;
         }
-        return "no exist";
+        return null;
     }
     public Object[] GetClientObjects(int id)
     {
@@ -266,30 +266,32 @@ public partial class TrpoContext : DbContext
         Realtors.Add(person);
         SaveChanges();
     }
-    public int IsExist(string login, string password)                       // '-1' - no one; '0...' - realtor, '1....' -
+    public (Realtor, Manager, Client) IsExist(string login, string password)                      
     { 
-        int who = -1;
+        Realtor realtor = null;
+        Manager manager = null;
+        Client client = null;
         foreach(Realtor person in Realtors)
         {
             if(person.Login == login && person.Password == password)
             {
-                who = person.Id;
+                realtor = person;
             }
         }
         foreach (Manager person in Managers)
         {
             if (person.Login == login && person.Password == password)
             {
-                who = person.Id;
+                manager = person;
             }
         }
         foreach (Client person in Clients)
         {
             if (person.Login == login && person.Password == password)
             {
-                who = person.Id;
+                client = person;
             }
         }
-        return who;
+        return (realtor, manager, client);
     }
 }
