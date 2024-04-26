@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using static ConsoleApp2.Models.TrpoContext;
 
 namespace ConsoleApp2.Models;
 
@@ -22,7 +23,13 @@ public partial class TrpoContext : DbContext
     public virtual DbSet<Order> Orders { get; set; }
 
     public virtual DbSet<Realtor> Realtors { get; set; }
-
+    public enum People
+    {
+        Manager,
+        Realtor,
+        Client,
+        No,
+    };
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=trpo;Trusted_Connection=true;");
 
@@ -189,7 +196,7 @@ public partial class TrpoContext : DbContext
         }
         return objects.ToArray();
     } // Объекты не размещённы в заказах
-    public void NewClient(string login, string password, string name, string surename, string patronymic, string email)
+    public bool NewClient(string login, string password, string name, string surename, string patronymic, string email)
     {
         int id;
         if (Clients.IsNullOrEmpty())
@@ -200,8 +207,12 @@ public partial class TrpoContext : DbContext
         {
             List<Client> cl = Clients.ToList<Client>();
             id = cl[cl.Count() - 1].Id + 1;
+            foreach (Client client in cl)
+            {
+                if (client.Login == login && client.Password == password) return false;
+            }
         }
-        Client client = new Client()
+        Client person = new Client()
         {
             Id = id,
             Login = login,
@@ -211,10 +222,11 @@ public partial class TrpoContext : DbContext
             Patronymic = patronymic,
             Email = email
         };
-        Clients.Add(client);
+        Clients.Add(person);
         SaveChanges();
+        return true;
     }
-    public void NewManager(string login, string password, string name, string surename, string patronymic, string email, int salary)
+    public bool NewManager(string login, string password, string name, string surename, string patronymic, string email, int salary)
     {
         int id;
         if (Managers.IsNullOrEmpty())
@@ -225,6 +237,10 @@ public partial class TrpoContext : DbContext
         {
             List<Manager> people = Managers.ToList<Manager>();
             id = people[people.Count() - 1].Id + 1;
+            foreach (Manager manager in people)
+            {
+                if (manager.Login == login && manager.Password == password) return false;
+            }
         }
         Manager person = new Manager()
         {
@@ -239,8 +255,9 @@ public partial class TrpoContext : DbContext
         };
         Managers.Add(person);
         SaveChanges();
+        return true;
     }
-    public void NewRealtor(string login, string password, string name, string surename, string patronymic, string email, double salary)
+    public bool NewRealtor(string login, string password, string name, string surename, string patronymic, string email, double salary)
     {
         int id;
         if (Realtors.IsNullOrEmpty())
@@ -251,6 +268,10 @@ public partial class TrpoContext : DbContext
         {
             List<Realtor> people = Realtors.ToList<Realtor>();
             id = people[people.Count() - 1].Id + 1;
+            foreach(Realtor realtor in people)
+            {
+                if (realtor.Login == login && realtor.Password == password) return false;
+            }
         }
         Realtor person = new Realtor()
         {
@@ -265,33 +286,36 @@ public partial class TrpoContext : DbContext
         };
         Realtors.Add(person);
         SaveChanges();
+        return true;
     }
-    public (Realtor, Manager, Client) IsExist(string login, string password)                      
-    { 
-        Realtor realtor = null;
-        Manager manager = null;
-        Client client = null;
+    public (People, int) IsExist(string login, string password)                      
+    {
+        int who = -1;
+        People people = People.No;
         foreach(Realtor person in Realtors)
         {
             if(person.Login == login && person.Password == password)
             {
-                realtor = person;
+                people = People.Realtor;
+                who = person.Id;
             }
         }
         foreach (Manager person in Managers)
         {
             if (person.Login == login && person.Password == password)
             {
-                manager = person;
+                people = People.Manager;
+                who = person.Id;
             }
         }
         foreach (Client person in Clients)
         {
             if (person.Login == login && person.Password == password)
             {
-                client = person;
+                people = People.Client;
+                who = person.Id;
             }
         }
-        return (realtor, manager, client);
+        return (people, who);
     }
 }
