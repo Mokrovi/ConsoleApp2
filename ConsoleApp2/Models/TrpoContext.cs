@@ -196,6 +196,22 @@ public partial class TrpoContext : DbContext
         }
         return objects.ToArray();
     } // Объекты не размещённы в заказах
+    public bool IsExist(string login, string password)
+    {
+        foreach (Client client in Clients)
+        {
+            if (client.Login == login && client.Password == password) return true;
+        }
+        foreach (Manager manager in Managers)
+        {
+            if (manager.Login == login && manager.Password == password) return true;
+        }
+        foreach (Realtor realtor in Realtors)
+        {
+            if (realtor.Login == login && realtor.Password == password) return true;
+        }
+        return false;
+    }
     public bool NewClient(string login, string password, string name, string surename, string patronymic, string email)
     {
         int id;
@@ -207,10 +223,7 @@ public partial class TrpoContext : DbContext
         {
             List<Client> cl = Clients.ToList<Client>();
             id = cl[cl.Count() - 1].Id + 1;
-            foreach (Client client in cl)
-            {
-                if (client.Login == login && client.Password == password) return false;
-            }
+            if (IsExist(login, password)) return false;
         }
         Client person = new Client()
         {
@@ -237,10 +250,7 @@ public partial class TrpoContext : DbContext
         {
             List<Manager> people = Managers.ToList<Manager>();
             id = people[people.Count() - 1].Id + 1;
-            foreach (Manager manager in people)
-            {
-                if (manager.Login == login && manager.Password == password) return false;
-            }
+            if (IsExist(login, password)) return false;
         }
         Manager person = new Manager()
         {
@@ -268,10 +278,7 @@ public partial class TrpoContext : DbContext
         {
             List<Realtor> people = Realtors.ToList<Realtor>();
             id = people[people.Count() - 1].Id + 1;
-            foreach(Realtor realtor in people)
-            {
-                if (realtor.Login == login && realtor.Password == password) return false;
-            }
+            if (IsExist(login, password)) return false;
         }
         Realtor person = new Realtor()
         {
@@ -288,7 +295,7 @@ public partial class TrpoContext : DbContext
         SaveChanges();
         return true;
     }
-    public (People, int) IsExist(string login, string password)                      
+    public (People, int) FindPerson(string login, string password)                      
     {
         int who = -1;
         People people = People.No;
